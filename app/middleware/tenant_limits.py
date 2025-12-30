@@ -112,7 +112,6 @@ class TenantLimitsMiddleware:
         
         #Calculate adding new numbers would exceed limit
         new_total=org.current_users+count_to_add
-        
         if new_total > org.user_limit:
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
@@ -233,7 +232,6 @@ class TenantLimitsMiddleware:
             )
         
         return True
-    
     @staticmethod
     def update_branch_count(organization_id:int,db:Session,increment:bool=True):
         """
@@ -288,7 +286,4 @@ class TenantLimitsMiddleware:
                 org.current_storage_mb+=size_mb
             else:
                 org.current_storage_mb=max(0,org.current_storage_mb-size_mb)
-            db.commit()
-                
-            
-            
+            db.commit()    

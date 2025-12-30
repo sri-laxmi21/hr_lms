@@ -46,16 +46,8 @@ class MenuResponse(MenuBase):
 
 class MenuTreeResponse(MenuResponse):
     children: List["MenuTreeResponse"] = Field(default_factory=list)
-<<<<<<< HEAD
     model_config = ConfigDict(from_attributes=True)
 
 
 # Pydantic v2 replacement for update_forward_refs
-=======
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-# Pydantic v2 forward reference fix
->>>>>>> origin/main
 MenuTreeResponse.model_rebuild()

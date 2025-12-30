@@ -1,4 +1,4 @@
 
 # conftest.py
-from .conftest_base import *
-from .conftest_fixtures import *
+from tests.conftest_base import *
+from tests.conftest_fixtures import *

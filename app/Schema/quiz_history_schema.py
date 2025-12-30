@@ -16,7 +16,7 @@ class QuizHistoryCreate(QuizHistoryBase):
 
 # Response with message
 class QuizHistoryMessageResponse(BaseModel):
-    message: str
+    message: str 
     id: int
     user_id: int
     checkpoint_id: int

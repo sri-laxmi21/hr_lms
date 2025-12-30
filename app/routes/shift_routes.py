@@ -83,7 +83,6 @@ def get_shift(
 
     return shift
 
-
 # ---------------------- UPDATE SHIFT ----------------------
 @router.put(
     "/{shift_id}",

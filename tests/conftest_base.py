@@ -1,9 +1,9 @@
-# tests/conftest_base.py
 import pytest
 from fastapi.testclient import TestClient
 from types import SimpleNamespace
 from collections import defaultdict
 from dotenv import load_dotenv
+import time
 
 from app.main import app
 from app.database import Base, engine, SessionLocal, get_db
@@ -16,11 +16,14 @@ load_dotenv(".env.test")
 # TEST RESULT STORAGE (IN-MEMORY)
 # ======================================================
 TEST_RESULTS = defaultdict(lambda: {
-    "total": 0,
+    "total_tests": 0,
     "passed": 0,
     "failed": 0,
-    "failures": []
+    "failures": [],
+    "errors": []
 })
+
+START_TIME = time.time()
 
 # ======================================================
 # DATABASE SETUP (CREATE TABLES ONCE)
@@ -52,7 +55,7 @@ def db_session():
         yield session
     finally:
         session.close()
-        transaction.rollback()   # 👈 removes ALL dummy data
+        transaction.rollback()
         connection.close()
 
 # ======================================================
@@ -94,15 +97,15 @@ def pytest_runtest_logreport(report):
         return
 
     module = report.nodeid.split("::")[0].split("/")[-1]
-    TEST_RESULTS[module]["total"] += 1
+    data = TEST_RESULTS[module]
+
+    data["total_tests"] += 1
 
     if report.passed:
-        TEST_RESULTS[module]["passed"] += 1
+        data["passed"] += 1
     else:
-        TEST_RESULTS[module]["failed"] += 1
-        TEST_RESULTS[module]["failures"].append(
-            str(report.longrepr)[:1000]
-        )
+        data["failed"] += 1
+        data["failures"].append(str(report.longrepr)[:1000])
 
 # ======================================================
 # SAVE TEST RESULTS (NO ROLLBACK)
@@ -112,16 +115,20 @@ def pytest_sessionfinish(session, exitstatus):
     Save test results permanently.
     Uses a SEPARATE DB session.
     """
+    execution_time = f"{round(time.time() - START_TIME, 2)}s"
+
     report_db = SessionLocal()
     try:
         for module, data in TEST_RESULTS.items():
             report_db.add(
                 TestReport(
                     module_name=module,
-                    total_tests=data["total"],
+                    total_tests=data["total_tests"],
                     passed=data["passed"],
                     failed=data["failed"],
-                    failures="\n".join(data["failures"]) or None
+                    failures=data["failures"] or None,
+                    errors=data["errors"] or None,
+                    execution_time=execution_time
                 )
             )
         report_db.commit()
