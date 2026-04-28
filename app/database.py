@@ -19,6 +19,10 @@ if "${" in DATABASE_URL:
     
     DATABASE_URL = re.sub(r'\$\{([^}]+)\}', expand_match, DATABASE_URL)
 
+# 🏎️ Force pymysql driver (Railway default URL is often mysql://)
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
