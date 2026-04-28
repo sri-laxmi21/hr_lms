@@ -2,9 +2,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 from typing import Optional, List, TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from __main__ import MenuTreeResponse  # for type checkers
-
+# -------------------------------
+# BASE SCHEMA
+# -------------------------------
 
 class MenuBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -16,11 +16,21 @@ class MenuBase(BaseModel):
     parent_id: Optional[int] = None
     menu_order: Optional[int] = 0
     is_active: Optional[bool] = True
+    module_id: int
 
+
+# -------------------------------
+# CREATE SCHEMA
+# -------------------------------
 
 class MenuCreate(MenuBase):
+    """Used while creating menu"""
     pass
 
+
+# -------------------------------
+# UPDATE SCHEMA
+# -------------------------------
 
 class MenuUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -32,10 +42,16 @@ class MenuUpdate(BaseModel):
     parent_id: Optional[int] = None
     menu_order: Optional[int] = None
     is_active: Optional[bool] = None
+    module_id: Optional[int] = None
 
+
+# -------------------------------
+# RESPONSE SCHEMA
+# -------------------------------
 
 class MenuResponse(MenuBase):
     id: int
+
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     created_by: Optional[str] = None
@@ -44,10 +60,18 @@ class MenuResponse(MenuBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+# -------------------------------
+# TREE RESPONSE (NESTED MENUS)
+# -------------------------------
+
 class MenuTreeResponse(MenuResponse):
     children: List["MenuTreeResponse"] = Field(default_factory=list)
+
     model_config = ConfigDict(from_attributes=True)
 
 
-# Pydantic v2 replacement for update_forward_refs
+# -------------------------------
+# FIX FOR FORWARD REFERENCES
+# -------------------------------
+
 MenuTreeResponse.model_rebuild()

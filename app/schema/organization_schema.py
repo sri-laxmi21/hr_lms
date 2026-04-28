@@ -62,6 +62,12 @@ class OrganizationDetailResponse(OrganizationResponse):
     subscription_start_date: Optional[date] = None
     subscription_end_date: Optional[date] = None
     
+    # Trial Period Info
+    is_trial: bool
+    trial_start_date: Optional[date] = None
+    trial_end_date: Optional[date] = None
+    trial_days: int
+    
     # Usage Tracking
     branch_limit: int
     current_branches: int
@@ -91,8 +97,21 @@ class OrganizationDetailResponse(OrganizationResponse):
     @property
     def is_subscription_active(self) -> bool:
         if not self.subscription_end_date:
-            return self.subscription_status == "active"
-        return self.subscription_end_date >= date.today() and self.subscription_status == "active"
+            return self.subscription_status in ["active", "trial"]
+        return self.subscription_end_date >= date.today() and self.subscription_status in ["active", "trial"]
+    
+    @property
+    def trial_days_remaining(self) -> Optional[int]:
+        if not self.is_trial or not self.trial_end_date:
+            return None
+        remaining = (self.trial_end_date - date.today()).days
+        return max(0, remaining)
+    
+    @property
+    def is_trial_expired(self) -> bool:
+        if not self.is_trial or not self.trial_end_date:
+            return False
+        return date.today() > self.trial_end_date
 
     model_config = {"from_attributes": True}
 

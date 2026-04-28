@@ -79,6 +79,32 @@ class UserResponse(UserBase):
 
     model_config = {"from_attributes": True}
 
+# ==========================================================
+# 🔹 ORGANIZATION USERS LIST RESPONSE
+# ==========================================================
+class UserOrganizationResponse(BaseModel):
+    id: int
+    first_name: str
+    last_name: Optional[str] = None
+    email: EmailStr
+    phone: Optional[str] = None
+    is_active: bool
+
+    organization_id: int
+
+    branch_id: Optional[int] = None
+    branch_name: Optional[str] = None
+
+    role_id: int
+    role_name: Optional[str] = None
+
+    salary_structure_id: Optional[int] = None
+    salary_structure_name: Optional[str] = None
+
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
 
 # ==========================================================
 # 🔹 DETAILED RESPONSE — extra relationship fields
@@ -104,9 +130,9 @@ class AuthRegister(BaseModel):
     email: EmailStr
     password: str
 
-    # Organization details (optional - will auto-create if not provided)
-    organization_name: Optional[str]
-    contact_phone: Optional[str]
+    # Organization details (optional - will link to existing or auto-create if not provided)
+    organization_id: Optional[int] = None
+    contact_phone: Optional[str] = None
 
 
 class AuthRegisterResponse(BaseModel):
@@ -130,5 +156,21 @@ class AuthRegisterResponse(BaseModel):
 
 class LoginResponse(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user: dict
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str = Field(..., min_length=6)
+
+class UpdatePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str = Field(..., min_length=6)
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
