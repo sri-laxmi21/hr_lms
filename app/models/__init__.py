@@ -31,7 +31,7 @@ from app.models.subscription_plans_m import *
 from app.models.add_on_m import *
 from app.models.organization_add_on_m import *
 from app.models.payment_m import *
-
+from app.models.payment_method_m import PaymentMethod
 from app.models.holiday_m import *
 from app.models.shift_m import Shift
 from app.models.department_m import Department
@@ -39,3 +39,7 @@ from app.models.attendance_punch_m import AttendancePunch
 from app.models.leavetype_m import LeaveType
 from app.models.leaveconfig_m import LeaveConfig
 from app.models.leave_balance_m import LeaveBalance
+from app.models.enrollment_m import Enrollment
+from app.models.subscription_plan_module_m import SubscriptionPlanModule
+from app.models.test_report_m import TestReport
+from app.models.module_m import Module

@@ -42,6 +42,17 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY_VIDEO: str
     AWS_REGION_VIDEO: str
     AWS_S3_BUCKET_VIDEO: str
+    
+    # Payment Gateway Settings
+    PAYMENT_GATEWAY: str = "razorpay"  # razorpay or stripe
+    RAZORPAY_KEY_ID: str = ""
+    RAZORPAY_KEY_SECRET: str = ""
+    RAZORPAY_WEBHOOK_SECRET: str = ""
+    STRIPE_PUBLIC_KEY: str = ""
+    STRIPE_SECRET_KEY: str = ""
+    
+    # Trial Period Settings
+    TRIAL_PERIOD_DAYS: int = 14
 
     # ✔️ NEW: Pydantic v2 model config
     model_config = ConfigDict(

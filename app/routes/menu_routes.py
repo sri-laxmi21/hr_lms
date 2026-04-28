@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.database import get_db
 from app.models.menu_m import Menu
+from app.models.module_m import Module
 from app.schema.menu_schema import MenuCreate, MenuUpdate, MenuResponse, MenuTreeResponse
+from app.schema.module_schema import ModuleWithMenus
 from app.dependencies import require_org_admin, get_current_user
 from app.models.user_m import User
 
@@ -49,6 +51,63 @@ def get_all_menus(
     menus = db.query(Menu).order_by(Menu.menu_order).all()
     return menus
 
+# ---------------- GET MENUS BY MODULES (Grouped) ----------------
+@router.get("/by-modules", response_model=List[ModuleWithMenus])
+def get_menus_by_modules(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    from app.models.role_right_m import RoleRight
+    
+    # 1. Get all modules
+    modules = db.query(Module).all()
+    
+    # 2. Get accessible menu IDs for current user
+    accessible_menu_ids = (
+        db.query(RoleRight.menu_id)
+        .filter(
+            RoleRight.role_id == current_user.role_id,
+            RoleRight.can_view == True
+        )
+        .all()
+    )
+    menu_ids = [m[0] for m in accessible_menu_ids]
+    
+    result = []
+    
+    # 3. For each module, build the tree
+    for module in modules:
+        # Fetch menus for this module that user has access to
+        module_menus = (
+            db.query(Menu)
+            .filter(
+                Menu.module_id == module.id,
+                Menu.id.in_(menu_ids),
+                Menu.is_active == True
+            )
+            .order_by(Menu.menu_order)
+            .all()
+        )
+        
+        # Build tree for this module
+        menu_dict = {menu.id: MenuTreeResponse.from_orm(menu) for menu in module_menus}
+        
+        for menu_id, menu_data in menu_dict.items():
+            menu_data.children = [
+                child for child in menu_dict.values() 
+                if child.parent_id == menu_id
+            ]
+        
+        # Root menus for this module
+        tree = [menu for menu in menu_dict.values() if menu.parent_id is None]
+        
+        # Create response object
+        module_resp = ModuleWithMenus.from_orm(module)
+        module_resp.menus = tree
+        result.append(module_resp)
+        
+    return result
+
 # ---------------- GET MENU TREE ----------------
 @router.get("/tree", response_model=List[MenuTreeResponse])
 def get_menu_tree(
@@ -79,6 +138,7 @@ def get_menu_tree(
 # ---------------- GET USER MENUS (Based on Role Rights) ----------------
 @router.get("/user-menus", response_model=List[MenuTreeResponse])
 def get_user_menus(
+    module_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -100,12 +160,12 @@ def get_user_menus(
         return []
     
     # Get those menus
-    accessible_menus = (
-        db.query(Menu)
-        .filter(Menu.id.in_(menu_ids), Menu.is_active == True)
-        .order_by(Menu.menu_order)
-        .all()
-    )
+    query = db.query(Menu).filter(Menu.id.in_(menu_ids), Menu.is_active == True)
+    
+    if module_id:
+        query = query.filter(Menu.module_id == module_id)
+        
+    accessible_menus = query.order_by(Menu.menu_order).all()
     
     # Build tree
     menu_dict = {menu.id: MenuTreeResponse.from_orm(menu) for menu in accessible_menus}

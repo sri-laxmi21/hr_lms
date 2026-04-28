@@ -42,23 +42,3 @@ def decode_access_token(token: str):
     except JWTError:
         return None
 
-
-# from passlib.context import CryptContext
-
-# # Initialize CryptContext for hashing
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# def hash_and_print_password(plain_password: str) -> None:
-#     """
-#     Takes a plain password, hashes it using bcrypt, and prints the hashed password.
-    
-#     Args:
-#         plain_password (str): The plain text password to hash.
-#     """
-#     hashed_password = pwd_context.hash(plain_password)
-#     print(f"Plain password: {plain_password}")
-#     print(f"Hashed password: {hashed_password}")
-
-# if __name__ == "__main__":
-#     password = input("Enter a password to hash: ")
-#     hash_and_print_password(password)

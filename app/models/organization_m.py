@@ -12,9 +12,15 @@ class Organization(Base):
     
     #Subscription & Billing \
     plan_id = Column(Integer,ForeignKey("subscription_plans.id") ,nullable=True)  # FK to SubscriptionPlan
-    subscription_status=Column(String(20), default="active")
+    subscription_status=Column(String(20), default="trial")  # trial, active, expired, suspended
     subscription_start_date=Column(Date, nullable=True)
     subscription_end_date=Column(Date, nullable=True)
+    
+    # Trial Period Tracking
+    is_trial = Column(Boolean, default=True)
+    trial_start_date = Column(Date, nullable=True)
+    trial_end_date = Column(Date, nullable=True)
+    trial_days = Column(Integer, default=14)  # Default trial period in days
     
     #Usage Tracking
     branch_limit=Column(Integer,default=2)
@@ -48,4 +54,5 @@ class Organization(Base):
     courses = relationship("Course", back_populates="organization", cascade="all, delete-orphan")
     add_ons = relationship("OrganizationAddOn", back_populates="organization", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="organization", cascade="all, delete-orphan")
+    payment_methods = relationship("PaymentMethod", back_populates="organization", cascade="all, delete-orphan")
     job_postings = relationship("JobPosting", back_populates="organization")

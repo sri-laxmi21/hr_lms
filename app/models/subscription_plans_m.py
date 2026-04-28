@@ -6,7 +6,7 @@ class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True, nullable=False) #basic, premium, enterprise
+    name = Column(String(50), unique=True, nullable=False) # trail,basic, premium, enterprise
     description = Column(String(255), nullable=True)
     
     #Pricing
@@ -16,7 +16,6 @@ class SubscriptionPlan(Base):
     #Limits
     branch_limit = Column(Integer, default=2)
     user_limit = Column(Integer, default=10)
-    users_per_branch = Column(Integer, nullable=True)
     storage_limit_mb= Column(Integer, default=1000)  # Storage limit in MB
 
     #Features

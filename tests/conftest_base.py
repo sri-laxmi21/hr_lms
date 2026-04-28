@@ -4,7 +4,6 @@ from types import SimpleNamespace
 from collections import defaultdict
 from dotenv import load_dotenv
 import time
-
 from app.main import app
 from app.database import Base, engine, SessionLocal, get_db
 from app.dependencies import get_current_user

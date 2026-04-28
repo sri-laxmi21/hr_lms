@@ -17,20 +17,20 @@ def get_role(db, name):
     return db.query(Role).filter(Role.name == name).first()
 
 
-def seed_role_rights():
-    db: Session = SessionLocal()
+def seed_role_rights(db: Session):
+
 
     try:
         # ---------------------------------------------------------
-        # 1️⃣ SUPER ADMIN → FULL ACCESS (GLOBAL)
+        # 1. SUPER ADMIN -> FULL ACCESS (GLOBAL)
         # ---------------------------------------------------------
         super_admin = get_role(db, "super_admin")
         if not super_admin:
-            print("❌ super_admin role missing. Run seed_roles.py first.")
+            print("[Error] super_admin role missing. Run seed_roles.py first.")
             return
 
         all_menus = db.query(Menu).all()
-        print(f"📋 Found {len(all_menus)} menus")
+        print(f"Found {len(all_menus)} menus")
 
         for menu in all_menus:
             exists = db.query(RoleRight).filter_by(
@@ -50,11 +50,11 @@ def seed_role_rights():
                     modified_by="System"
                 ))
         
-        print(f"✅ Super Admin: Granted full access to all {len(all_menus)} menus")
+        print(f"Super Admin: Granted full access to all {len(all_menus)} menus")
 
 
         # ---------------------------------------------------------
-        # 2️⃣ ORG ADMIN → FULL ACCESS WITHIN THE ORG
+        # 2. ORG ADMIN -> FULL ACCESS WITHIN THE ORG
         # ---------------------------------------------------------
         org_admin = get_role(db, "org_admin")
         if org_admin:
@@ -76,15 +76,15 @@ def seed_role_rights():
                         modified_by="System"
                     ))
             
-            print(f"✅ Org Admin: Granted full access to all {len(all_menus)} menus")
+            print(f"Org Admin: Granted full access to all {len(all_menus)} menus")
 
 
         # ---------------------------------------------------------
-        # 3️⃣ EMPLOYEE → LIMITED ACCESS
+        # 3. EMPLOYEE -> LIMITED ACCESS
         # ---------------------------------------------------------
         employee = get_role(db, "employee")
         if employee:
-            # ✅ Use actual menu names from your seeder
+            # Use actual menu names from your seeder
             employee_allowed_menus = [
                 "dashboard",           # Menu ID 1
                 "attendance",          # Menu ID 44 (HRMS module)
@@ -119,11 +119,11 @@ def seed_role_rights():
                         modified_by="System"
                     ))
             
-            print(f"✅ Employee: Granted view access to {len(employee_allowed_menus)} menus")
+            print(f"Employee: Granted view access to {len(employee_allowed_menus)} menus")
 
 
         # ---------------------------------------------------------
-        # 4️⃣ MANAGER → MODERATE ACCESS
+        # 4. MANAGER -> MODERATE ACCESS
         # ---------------------------------------------------------
         manager = get_role(db, "manager")
         if manager:
@@ -172,7 +172,7 @@ def seed_role_rights():
             for menu_name, perms in manager_access.items():
                 menu = get_menu_by_name(db, menu_name)
                 if not menu:
-                    print(f"⚠️  Menu '{menu_name}' not found, skipping...")
+                    print(f"[Warning] Menu '{menu_name}' not found, skipping...")
                     continue
 
                 can_view, can_create, can_edit, can_delete = perms
@@ -194,15 +194,15 @@ def seed_role_rights():
                         modified_by="System"
                     ))
             
-            print(f"✅ Manager: Granted access to {len(manager_access)} menus")
+            print(f"Manager: Granted access to {len(manager_access)} menus")
 
 
         # ---------------------------------------------------------
         # Commit changes
         # ---------------------------------------------------------
         db.commit()
-        print("\n✅ Role rights seeded successfully!")
-        print("\n📊 Summary:")
+        print("\nRole rights seeded successfully!")
+        print("\nSummary:")
         print(f"   - super_admin: {db.query(RoleRight).filter_by(role_id=super_admin.id).count()} permissions")
         if org_admin:
             print(f"   - org_admin: {db.query(RoleRight).filter_by(role_id=org_admin.id).count()} permissions")
@@ -213,13 +213,15 @@ def seed_role_rights():
 
     except Exception as e:
         db.rollback()
-        print(f"\n❌ Error seeding role rights: {e}")
+        print(f"\n[Error] Error seeding role rights: {e}")
         import traceback
         traceback.print_exc()
 
-    finally:
-        db.close()
 
 
 if __name__ == "__main__":
-    seed_role_rights()
+    db = SessionLocal()
+    try:
+        seed_role_rights(db)
+    finally:
+        db.close()

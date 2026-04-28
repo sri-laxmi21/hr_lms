@@ -14,6 +14,19 @@ from app.schema.user_schema import AuthRegister, AuthRegisterResponse
 from app.utils.utils import hash_password, verify_password, create_access_token
 from app.middleware.tenant_limits import TenantLimitsMiddleware
 from app.dependencies import get_current_user
+from app.config import settings
+
+from app.database import get_db
+from app.models.user_m import User
+from app.models.role_m import Role
+from app.models.organization_m import Organization
+from app.models.subscription_plans_m import SubscriptionPlan
+from app.models.menu_m import Menu
+from app.models.role_right_m import RoleRight
+from app.schema.user_schema import AuthRegister, AuthRegisterResponse
+from app.utils.utils import hash_password, verify_password, create_access_token
+from app.middleware.tenant_limits import TenantLimitsMiddleware
+from app.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -205,15 +218,24 @@ async def register(user: AuthRegister, db: Session = Depends(get_db)):
             ).first()
             counter += 1
     
+    trial_days = settings.TRIAL_PERIOD_DAYS
+    trial_end = date.today() + timedelta(days=trial_days)
+    
     new_org = Organization(
         name=organization_name,
         description=f"Organization for {user.first_name} {user.last_name or ''}",
         plan_id=default_plan.id,
         
-        # Subscription settings (30-day trial)
+        # Subscription settings (trial period)
         subscription_status="trial",
         subscription_start_date=date.today(),
-        subscription_end_date=date.today() + timedelta(days=30),
+        subscription_end_date=trial_end,
+        
+        # Trial Period Fields
+        is_trial=True,
+        trial_start_date=date.today(),
+        trial_end_date=trial_end,
+        trial_days=trial_days,
         
         # Set limits from plan
         branch_limit=default_plan.branch_limit,
@@ -227,7 +249,7 @@ async def register(user: AuthRegister, db: Session = Depends(get_db)):
         
         # Billing info
         last_payment_date=None,
-        next_billing_date=date.today() + timedelta(days=30),
+        next_billing_date=trial_end,
         total_amount_paid=0,
         
         # Contact info

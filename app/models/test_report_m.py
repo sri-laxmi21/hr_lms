@@ -17,7 +17,7 @@ class TestReport(Base):
     
     # ---------------- EXECUTION INFO ----------------
     execution_time = Column(String(50), nullable=False)
-    # framework = Column(String(50), default="pytest")
+  
     environment = Column(String(50), default="local")
 
     # ---------------- TIMESTAMPS ----------------

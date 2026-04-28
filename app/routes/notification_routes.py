@@ -130,5 +130,3 @@ def delete_notification(
     db.commit()
 
     return {"detail": "Notification deleted successfully"}
-
-

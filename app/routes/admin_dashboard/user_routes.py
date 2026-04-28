@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import and_, or_
 from typing import List, Optional
 
 from app.database import get_db
 from app.schema.user_schema import (
-    UserCreate, 
+    UserCreate,
+    UserOrganizationResponse, 
     UserResponse, 
     UserDetailResponse,
     UserUpdate
@@ -161,6 +162,78 @@ async def create_user(
     return UserResponse.model_validate(new_user)
 
 
+
+# ============================================================
+# GET USERS OF MY ORGANIZATION (ORG ADMIN VIEW)
+# ============================================================
+@router.get(
+    "/my-organization",
+    response_model=List[UserOrganizationResponse],
+    dependencies=[Depends(require_view_permission(USERS_MENU_ID))]
+)
+def get_users_of_my_organization(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    if not current_user.organization_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not linked to any organization"
+        )
+
+    users = (
+        db.query(User)
+        .options(
+            joinedload(User.branch), # type: ignore
+            joinedload(User.role), # type: ignore
+            joinedload(User.salary_structure), # type: ignore
+        )
+        .filter(User.organization_id == current_user.organization_id)
+        .all()
+    )
+
+    response = []
+
+    for u in users:
+        salary_structure_name = None
+
+        if u.salary_structure:
+            # ✅ SAFE ATTRIBUTE ACCESS (NO AttributeError EVER)
+            salary_structure_name = (
+                getattr(u.salary_structure, "name", None)
+                or getattr(u.salary_structure, "title", None)
+                or getattr(u.salary_structure, "structure_name", None)
+                or getattr(u.salary_structure, "code", None)
+            )
+
+        response.append(
+            UserOrganizationResponse(
+                id=u.id,
+                first_name=u.first_name,
+                last_name=u.last_name,
+                email=u.email,
+                phone=None, # phone not in User model
+                is_active=not u.inactive,
+
+                organization_id=u.organization_id,
+
+                branch_id=u.branch_id,
+                branch_name=u.branch.name if u.branch else None,
+
+                role_id=u.role_id,
+                role_name=u.role.name if u.role else None,
+
+                salary_structure_id=u.salary_structure_id,
+                salary_structure_name=salary_structure_name,
+
+                created_at=u.created_at,
+            )
+        )
+
+    return response
+
+
+
 # ============================================================
 # AVAILABLE ROLES TO ASSIGN
 # ============================================================
@@ -203,70 +276,6 @@ async def get_available_roles(
             "display_name": r.name.replace("_", " ").title()
         }
         for r in roles
-    ]
-
-
-# ============================================================
-# GET ALL USERS
-# ============================================================
-@router.get("/", response_model=List[UserDetailResponse])
-async def get_users(
-    skip: int = 0,
-    limit: int = 100,
-    role_id: Optional[int] = None,
-    branch_id: Optional[int] = None,
-    inactive: Optional[bool] = None,
-    search: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_view_permission(USERS_MENU_ID))
-):
-    """ ✅ Get all users in the current organization
-    - Super admin can see all organizations
-    - Regular users see only their organization's users """
-
-    query = db.query(User).options(
-        selectinload(User.role),
-        selectinload(User.branch),
-        selectinload(User.organization),
-        selectinload(User.department),
-        selectinload(User.salary_structure)
-    )
-
-# 🔒 Filter by organization (unless super admin)
-    if current_user.role.name.lower() != "super_admin":
-        query = query.filter(User.organization_id == current_user.organization_id)
-
-    
-     # Apply filters
-    if role_id:
-        query = query.filter(User.role_id == role_id)
-    if branch_id:
-        query = query.filter(User.branch_id == branch_id)
-    if inactive is not None:
-        query = query.filter(User.inactive == inactive)
-
-    if search:
-        query = query.filter(
-            or_(
-                User.first_name.ilike(f"%{search}%"),
-                User.last_name.ilike(f"%{search}%"),
-                User.email.ilike(f"%{search}%")
-            )
-        )
-
-    users = query.offset(skip).limit(limit).all()
-
-    # Map to detailed response
-    return [
-        UserDetailResponse(
-            **u.__dict__,
-            role_name=u.role.name if u.role else None,
-            branch_name=u.branch.name if u.branch else None,
-            organization_name=u.organization.name if u.organization else None,
-            department_name=u.department.name if u.department else None,
-            salary_structure_name=u.salary_structure.name if u.salary_structure else None
-        )
-        for u in users
     ]
 
 

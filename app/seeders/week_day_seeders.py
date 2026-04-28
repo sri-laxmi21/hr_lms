@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models.week_day_m import WeekDay
 
-def seed_weekdays():
+def seed_weekdays(db: Session):
     weekdays = [
         {"id": 1, "week_name": "Monday"},
         {"id": 2, "week_name": "Tuesday"},
@@ -13,16 +13,20 @@ def seed_weekdays():
         {"id": 6, "week_name": "Saturday"},
         {"id": 7, "week_name": "Sunday"}
     ]
-    db:Session = SessionLocal()
+
     for day in weekdays:
         existing = db.query(WeekDay).filter_by(week_name=day["week_name"]).first()
         if not existing:
             db.add(WeekDay(**day))
 
     db.commit()
-    db.close()
-    print("✅ Weekdays seeded successfully!")
+
+    print("Weekdays seeded successfully!")
 
 if __name__ == "__main__":
-    seed_weekdays()
+    db = SessionLocal()
+    try:
+        seed_weekdays(db)
+    finally:
+        db.close()
 

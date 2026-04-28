@@ -14,7 +14,8 @@ class Menu(Base):
     parent_id = Column(Integer, ForeignKey("menus.id"), nullable=True)
     menu_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
-    
+
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     created_by = Column(String(100), nullable=True)
@@ -25,3 +26,4 @@ class Menu(Base):
     
     # Relationship with role rights
     role_rights = relationship("RoleRight", back_populates="menu", cascade="all, delete-orphan")
+    module_id = Column(Integer, ForeignKey("modules.id"), nullable=False)
