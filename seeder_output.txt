@@ -1,0 +1,19 @@
+Running seeders...
+Menus seeded successfully
+Weekdays seeded successfully!
+Found 47 menus
+Super Admin: Granted full access to all 47 menus
+Org Admin: Granted full access to all 47 menus
+Employee: Granted view access to 7 menus
+Manager: Granted access to 22 menus
+
+Role rights seeded successfully!
+
+Summary:
+   - super_admin: 47 permissions
+   - org_admin: 47 permissions
+   - employee: 7 permissions
+   - manager: 22 permissions
+Super Admin already exists
+Subscription plan-module mapping seeded successfully
+All seeders executed successfully

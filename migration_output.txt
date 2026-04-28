@@ -1,0 +1,4 @@
+INFO  [alembic.runtime.migration] Context impl MySQLImpl.
+INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade fc20b1fdeb0d -> b9b845bcd0a7, create a modules table
+INFO  [alembic.runtime.migration] Running upgrade b9b845bcd0a7 -> a37d3b334889, create subscription_plan_modules table
