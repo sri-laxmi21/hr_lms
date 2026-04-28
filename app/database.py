@@ -9,6 +9,15 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is not set")
 
+# 🛠️ Fix for Railway/Local environment expansion issues
+if "${" in DATABASE_URL:
+    import re
+    def expand_match(match):
+        var_name = match.group(1)
+        # Try both the name inside ${} and the common Railway names
+        return os.getenv(var_name) or os.getenv(f"MYSQL{var_name.replace('DB_', '')}") or match.group(0)
+    
+    DATABASE_URL = re.sub(r'\$\{([^}]+)\}', expand_match, DATABASE_URL)
 
 engine = create_engine(
     DATABASE_URL,
