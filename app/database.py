@@ -23,6 +23,14 @@ if "${" in DATABASE_URL:
 if DATABASE_URL.startswith("mysql://"):
     DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
 
+# 🔍 DEBUG: Print the connection host (masking password)
+try:
+    from urllib.parse import urlparse
+    parsed = urlparse(DATABASE_URL)
+    print(f"📡 Attempting to connect to: {parsed.scheme}://{parsed.username}:****@{parsed.hostname}:{parsed.port}{parsed.path}")
+except:
+    print(f"📡 Attempting to connect to DATABASE_URL (parsing failed)")
+
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
