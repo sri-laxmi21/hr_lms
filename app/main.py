@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
@@ -51,7 +53,6 @@ async def lifespan(app: FastAPI):
     # In production → Alembic only.
     Base.metadata.create_all(bind=engine)
 
-    # Run all seeders automatically
     try:
         run_all_seeders()
     except Exception as e:
@@ -66,6 +67,18 @@ app = FastAPI(
     title="HRMS + LMS Backend",
     lifespan=lifespan
 )
+
+# ======================
+# CORS MIDDLEWARE
+# ======================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For production, replace "*" with the specific origin of your frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ======================
 # ROOT
